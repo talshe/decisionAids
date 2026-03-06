@@ -69,7 +69,7 @@ jobs:
             --region=${{ github.event.inputs.region }} \
             --platform=managed \
             --allow-unauthenticated \
-            --set-env-vars="PORT=5000,CORS_ORIGIN=${{ secrets.CORS_ORIGIN }},FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }},FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }},FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }},ADMIN_EMAILS=${{ secrets.ADMIN_EMAILS }},ADMIN_UIDS=${{ secrets.ADMIN_UIDS }}"
+            --set-env-vars="CORS_ORIGIN=${{ secrets.CORS_ORIGIN }},FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }},FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }},FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }},ADMIN_EMAILS=${{ secrets.ADMIN_EMAILS }},ADMIN_UIDS=${{ secrets.ADMIN_UIDS }}"
           URL=$(gcloud run services describe ${{ github.event.inputs.cloud_run_service }} --region=${{ github.event.inputs.region }} --format='value(status.url)')
           echo "url=$URL" >> $GITHUB_OUTPUT
 
