@@ -1,0 +1,118 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      region:
+        description: 'GCP region (e.g. us-central1)'
+        required: false
+        type: string
+        default: 'us-central1'
+      artifact_registry_repo:
+        description: 'Artifact Registry repository name'
+        required: false
+        type: string
+        default: 'decision-aids'
+      cloud_run_service:
+        description: 'Cloud Run service name'
+        required: false
+        type: string
+        default: 'decision-aids-api'
+
+env:
+  NODE_VERSION: 'lts/*'
+  PROJECT_ID: 'decisionaids-c0fe2'
+
+jobs:
+  deploy-backend:
+    name: Deploy backend to Cloud Run
+    runs-on: ubuntu-latest
+    outputs:
+      service_url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ github.event.inputs.region }}-docker.pkg.dev --quiet
+
+      - name: Ensure Artifact Registry repository exists
+        run: |
+          gcloud artifacts repositories describe ${{ github.event.inputs.artifact_registry_repo }} \
+            --location=${{ github.event.inputs.region }} 2>/dev/null || \
+          gcloud artifacts repositories create ${{ github.event.inputs.artifact_registry_repo }} \
+            --repository-format=docker \
+            --location=${{ github.event.inputs.region }}
+
+      - name: Build and push backend image
+        run: |
+          IMAGE="${{ github.event.inputs.region }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ github.event.inputs.artifact_registry_repo }}/${{ github.event.inputs.cloud_run_service }}:${{ github.sha }}"
+          docker build -t "$IMAGE" ./backend
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        run: |
+          IMAGE="${{ github.event.inputs.region }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ github.event.inputs.artifact_registry_repo }}/${{ github.event.inputs.cloud_run_service }}:${{ github.sha }}"
+          gcloud run deploy ${{ github.event.inputs.cloud_run_service }} \
+            --image="$IMAGE" \
+            --region=${{ github.event.inputs.region }} \
+            --platform=managed \
+            --allow-unauthenticated \
+            --set-env-vars="PORT=5000,CORS_ORIGIN=${{ secrets.CORS_ORIGIN }},FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }},FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }},FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }},ADMIN_EMAILS=${{ secrets.ADMIN_EMAILS }},ADMIN_UIDS=${{ secrets.ADMIN_UIDS }}"
+          URL=$(gcloud run services describe ${{ github.event.inputs.cloud_run_service }} --region=${{ github.event.inputs.region }} --format='value(status.url)')
+          echo "url=$URL" >> $GITHUB_OUTPUT
+
+  deploy-frontend:
+    name: Deploy frontend to Firebase Hosting
+    runs-on: ubuntu-latest
+    needs: deploy-backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: frontend
+
+      - name: Build frontend
+        env:
+          VITE_API_BASE_URL: ${{ needs.deploy-backend.outputs.service_url }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.VITE_FIREBASE_MEASUREMENT_ID }}
+        run: npm run build
+        working-directory: frontend
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase (Hosting + Firestore)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/firebase-sa.json
+        run: |
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > firebase-sa.json
+          firebase use ${{ env.PROJECT_ID }}
+          firebase deploy --only hosting,firestore --non-interactive

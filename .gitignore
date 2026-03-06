@@ -8,6 +8,9 @@ dist/
 coverage/
 .cache/
 .vite/
+.terraform/
+*.tfstate
+*.tfstate.*
 
 .DS_Store
 Thumbs.db

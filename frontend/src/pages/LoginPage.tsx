@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import heroIllustration from '../assets/physio-illustration.svg'
 import supportIllustration from '../assets/supporting-hands.svg'
@@ -80,6 +81,9 @@ const LoginPage = () => {
                 </button>
               ))}
             </div>
+            <Link className="inline-link inline-link-center" to="/explore">
+              Continue as guest
+            </Link>
             {error ? <p className="error-text">{error}</p> : null}
           </div>
         </section>

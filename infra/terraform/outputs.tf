@@ -1,0 +1,11 @@
+output "backend_service_name" {
+  value = google_cloud_run_v2_service.backend.name
+}
+
+output "backend_service_url" {
+  value = google_cloud_run_v2_service.backend.uri
+}
+
+output "backend_service_account" {
+  value = google_service_account.backend.email
+}
