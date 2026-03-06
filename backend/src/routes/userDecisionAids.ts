@@ -44,7 +44,7 @@ export const createUserDecisionAidRouter = (store: AppStore) => {
       return res.status(401).json({ error: 'Authentication is required.' })
     }
 
-    const decisionAid = await store.getDecisionAidById(req.params.id)
+    const decisionAid = await store.getDecisionAidById(req.params.id as string)
     if (!decisionAid || decisionAid.publishStatus !== 'published') {
       return res.status(404).json({ error: 'Decision aid not found.' })
     }
@@ -61,7 +61,7 @@ export const createUserDecisionAidRouter = (store: AppStore) => {
       return res.status(401).json({ error: 'Authentication is required.' })
     }
 
-    const response = await store.getResponse(req.appUser.uid, req.params.id)
+    const response = await store.getResponse(req.appUser.uid, req.params.id as string)
     return res.json({ response })
   })
 
@@ -74,7 +74,7 @@ export const createUserDecisionAidRouter = (store: AppStore) => {
       return res.status(400).json({ error: 'Invalid response payload.' })
     }
 
-    const decisionAid = await store.getDecisionAidById(req.params.id)
+    const decisionAid = await store.getDecisionAidById(req.params.id as string)
     if (!decisionAid || decisionAid.publishStatus !== 'published') {
       return res.status(404).json({ error: 'Decision aid not found.' })
     }

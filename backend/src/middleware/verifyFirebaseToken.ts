@@ -1,9 +1,9 @@
-import type { NextFunction, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 import type { DecodedIdToken } from 'firebase-admin/auth'
 import { adminAuth } from '../lib/firebaseAdmin'
 import type { UserProfile } from '../domain/models'
 
-export type AuthenticatedRequest = Express.Request & {
+export type AuthenticatedRequest = Request & {
   user?: DecodedIdToken
   appUser?: UserProfile
 }

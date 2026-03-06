@@ -56,7 +56,7 @@ export const createAdminRouter = (store: AppStore) => {
 
     const item = await store.saveDecisionAid({
       ...req.body,
-      id: req.params.id,
+      id: req.params.id as string,
     })
     return res.json({ item })
   })
@@ -73,7 +73,7 @@ export const createAdminRouter = (store: AppStore) => {
       return res.status(400).json({ error: 'Invalid role.' })
     }
 
-    const user = await store.setUserRole(req.params.uid, role)
+    const user = await store.setUserRole(req.params.uid as string, role)
     if (!user) {
       return res.status(404).json({ error: 'User not found.' })
     }
