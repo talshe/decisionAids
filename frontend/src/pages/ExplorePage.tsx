@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { apiRequest } from '../lib/api'
+import { useLocalePath } from '../hooks/useLocale'
 import type { ExploreResponse } from '../types/decisionAid'
 
 const ExplorePage = () => {
+  const { t } = useTranslation()
+  const localePath = useLocalePath()
   const [searchParams, setSearchParams] = useSearchParams()
   const [data, setData] = useState<ExploreResponse>({ items: [], availableTags: [] })
   const [loading, setLoading] = useState(true)
@@ -23,38 +27,33 @@ const ExplorePage = () => {
     apiRequest<ExploreResponse>(`/api/explore?${query.toString()}`)
       .then((response) => setData(response))
       .catch((err) =>
-        setError(err instanceof Error ? err.message : 'Failed to load decision aids.'),
+        setError(err instanceof Error ? err.message : t('common.failedLoadDecisionAids')),
       )
       .finally(() => setLoading(false))
-  }, [search, tag])
+  }, [search, tag, t])
 
   const heading = useMemo(() => {
     if (search) {
-      return `Results for "${search}"`
+      return t('explore.headingSearch', { search })
     }
-
     if (tag) {
-      return `Decision aids tagged "${tag}"`
+      return t('explore.headingTag', { tag })
     }
-
-    return 'Explore decision aids'
-  }, [search, tag])
+    return t('explore.headingDefault')
+  }, [search, tag, t])
 
   return (
     <div className="stack-lg">
       <section className="card hero-card">
         <div>
-          <p className="eyebrow">Explore</p>
+          <p className="eyebrow">{t('explore.eyebrow')}</p>
           <h2>{heading}</h2>
-          <p className="subtitle">
-            Browse published decision aids and open any item in guest mode or sign
-            in to save progress.
-          </p>
+          <p className="subtitle">{t('explore.subtitle')}</p>
         </div>
 
         <div className="toolbar">
           <label className="search-input">
-            <span className="sr-only">Search decision aids</span>
+            <span className="sr-only">{t('explore.searchLabel')}</span>
             <input
               value={search}
               onChange={(event) => {
@@ -66,7 +65,7 @@ const ExplorePage = () => {
                 }
                 setSearchParams(next)
               }}
-              placeholder="Search by title, topic, or tag"
+              placeholder={t('explore.searchPlaceholder')}
             />
           </label>
           <select
@@ -82,7 +81,7 @@ const ExplorePage = () => {
               setSearchParams(next)
             }}
           >
-            <option value="">All topics</option>
+            <option value="">{t('explore.allTopics')}</option>
             {data.availableTags.map((availableTag) => (
               <option key={availableTag} value={availableTag}>
                 {availableTag}
@@ -92,7 +91,7 @@ const ExplorePage = () => {
         </div>
       </section>
 
-      {loading ? <div className="card">Loading decision aids...</div> : null}
+      {loading ? <div className="card">{t('explore.loading')}</div> : null}
       {error ? <div className="card error-text">{error}</div> : null}
 
       {!loading && !error ? (
@@ -108,9 +107,14 @@ const ExplorePage = () => {
               </div>
               <h3>{item.title}</h3>
               <p className="subtitle">{item.summary}</p>
-              <p className="meta-copy">{item.estimatedMinutes} minute guided review</p>
-              <Link className="inline-link" to={`/decision-aids/${item.slug}`}>
-                Open decision aid
+              <p className="meta-copy">
+                {t('explore.minuteReview', { count: item.estimatedMinutes })}
+              </p>
+              <Link
+                className="inline-link"
+                to={localePath(`decision-aids/${item.slug}`)}
+              >
+                {t('explore.openDecisionAid')}
               </Link>
             </article>
           ))}

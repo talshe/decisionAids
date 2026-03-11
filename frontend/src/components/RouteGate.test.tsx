@@ -19,17 +19,17 @@ describe('RouteGate', () => {
     })
 
     render(
-      <MemoryRouter initialEntries={['/my-decision-aids']}>
+      <MemoryRouter initialEntries={['/en/my-decision-aids']}>
         <Routes>
           <Route
-            path="/my-decision-aids"
+            path="/:locale/my-decision-aids"
             element={
               <RouteGate minimumRole="user">
                 <div>Private page</div>
               </RouteGate>
             }
           />
-          <Route path="/login" element={<div>Login page</div>} />
+          <Route path="/:locale/login" element={<div>Login page</div>} />
         </Routes>
       </MemoryRouter>,
     )
@@ -44,10 +44,17 @@ describe('RouteGate', () => {
     })
 
     render(
-      <MemoryRouter>
-        <RouteGate minimumRole="admin">
-          <div>Admin page</div>
-        </RouteGate>
+      <MemoryRouter initialEntries={['/en/admin']}>
+        <Routes>
+          <Route
+            path="/:locale/admin"
+            element={
+              <RouteGate minimumRole="admin">
+                <div>Admin page</div>
+              </RouteGate>
+            }
+          />
+        </Routes>
       </MemoryRouter>,
     )
 

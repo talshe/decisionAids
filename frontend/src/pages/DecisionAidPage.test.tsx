@@ -55,9 +55,12 @@ describe('DecisionAidPage', () => {
     })
 
     render(
-      <MemoryRouter initialEntries={['/decision-aids/lower-back-pain-options']}>
+      <MemoryRouter initialEntries={['/en/decision-aids/lower-back-pain-options']}>
         <Routes>
-          <Route path="/decision-aids/:slug" element={<DecisionAidPage />} />
+          <Route
+            path="/:locale/decision-aids/:slug"
+            element={<DecisionAidPage />}
+          />
         </Routes>
       </MemoryRouter>,
     )

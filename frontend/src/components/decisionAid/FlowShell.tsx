@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 type FlowShellProps = {
   currentStepIndex: number
   totalSteps: number
@@ -19,6 +21,7 @@ const FlowShell = ({
   children,
   footer,
 }: FlowShellProps) => {
+  const { t } = useTranslation()
   const progress = totalSteps > 1 ? ((currentStepIndex + 1) / totalSteps) * 100 : 100
 
   return (
@@ -26,7 +29,10 @@ const FlowShell = ({
       <div className="progress-card">
         <div className="progress-meta">
           <span>
-            Step {currentStepIndex + 1} of {totalSteps}
+            {t('flowShell.stepOf', {
+              current: currentStepIndex + 1,
+              total: totalSteps,
+            })}
           </span>
           <span>{Math.round(progress)}%</span>
         </div>
@@ -44,7 +50,7 @@ const FlowShell = ({
           onClick={onBack}
           disabled={!canGoBack}
         >
-          Previous
+          {t('flowShell.previous')}
         </button>
         <button
           type="button"
@@ -52,7 +58,9 @@ const FlowShell = ({
           onClick={onForward}
           disabled={!canGoForward}
         >
-          {currentStepIndex + 1 === totalSteps ? 'Finish review' : 'Next step'}
+          {currentStepIndex + 1 === totalSteps
+            ? t('flowShell.finishReview')
+            : t('flowShell.nextStep')}
         </button>
       </div>
 

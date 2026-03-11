@@ -1,21 +1,20 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
+import { useLocalePath } from '../hooks/useLocale'
 import heroIllustration from '../assets/physio-illustration.svg'
 import supportIllustration from '../assets/supporting-hands.svg'
 
-const providers = [
-  { id: 'google', label: 'המשך עם Google' },
-  { id: 'apple', label: 'המשך עם Apple' },
-  { id: 'microsoft', label: 'המשך עם Microsoft' },
-  { id: 'facebook', label: 'המשך עם Facebook' },
-] as const
+const PROVIDER_IDS = ['google', 'apple', 'microsoft', 'facebook'] as const
 
 const LoginPage = () => {
+  const { t } = useTranslation()
+  const localePath = useLocalePath()
   const { signInWithProvider, error } = useAuth()
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null)
 
-  const handleSignIn = async (providerId: (typeof providers)[number]['id']) => {
+  const handleSignIn = async (providerId: (typeof PROVIDER_IDS)[number]) => {
     setLoadingProvider(providerId)
     try {
       await signInWithProvider(providerId)
@@ -24,65 +23,68 @@ const LoginPage = () => {
     }
   }
 
+  const providerLabels: Record<(typeof PROVIDER_IDS)[number], string> = {
+    google: t('login.continueWithGoogle'),
+    apple: t('login.continueWithApple'),
+    microsoft: t('login.continueWithMicrosoft'),
+    facebook: t('login.continueWithFacebook'),
+  }
+
   return (
     <div className="login-page">
       <div className="login-grid">
         <section className="login-hero">
-          <div className="login-pill">Alice | עזרי החלטה</div>
-          <h1>משתפים אפשרויות פיזיותרפיה בבהירות.</h1>
-          <p className="login-description">
-            זה המקום שבו אליס משתפת מסמכי עזר להחלטה עם מטופלים, כדי שיוכלו
-            להשוות טיפולי פיזיותרפיה, להבין תוצאות ולבחור יחד את הצעד הבא.
-          </p>
+          <div className="login-pill">{t('login.pill')}</div>
+          <h1>{t('login.heroTitle')}</h1>
+          <p className="login-description">{t('login.heroDescription')}</p>
           <div className="login-badges">
-            <span className="login-badge">הכוונה מבוססת ראיות</span>
-            <span className="login-badge">סיכומים ידידותיים למטופל</span>
-            <span className="login-badge">קבלת החלטות משותפת</span>
+            <span className="login-badge">{t('login.badge1')}</span>
+            <span className="login-badge">{t('login.badge2')}</span>
+            <span className="login-badge">{t('login.badge3')}</span>
           </div>
           <div className="login-visuals">
             <img
               src={heroIllustration}
-              alt="איור עזרי החלטה לפיזיותרפיה"
+              alt={t('login.heroIllustrationAlt')}
               className="login-illustration"
             />
             <div className="login-info-card">
               <img
                 src={supportIllustration}
-                alt="סמל לטיפול תומך"
+                alt={t('login.supportIconAlt')}
                 className="login-info-icon"
               />
               <div>
-                <p className="login-info-title">מוכנים לכל מפגש</p>
-                <p className="login-info-text">
-                  שלחו עזרי החלטה מותאמים בתוך שניות.
-                </p>
+                <p className="login-info-title">{t('login.infoTitle')}</p>
+                <p className="login-info-text">{t('login.infoText')}</p>
               </div>
             </div>
           </div>
         </section>
         <section className="login-panel">
           <div className="card login-card">
-            <h2>כניסה</h2>
-            <p className="subtitle">
-              המשיכו עם הספק המועדף כדי לגשת לספרייה.
-            </p>
+            <h2>{t('login.heading')}</h2>
+            <p className="subtitle">{t('login.subtitle')}</p>
             <div className="button-group">
-              {providers.map((provider) => (
+              {PROVIDER_IDS.map((providerId) => (
                 <button
-                  key={provider.id}
+                  key={providerId}
                   type="button"
                   className="primary-button"
-                  onClick={() => handleSignIn(provider.id)}
-                  disabled={loadingProvider === provider.id}
+                  onClick={() => handleSignIn(providerId)}
+                  disabled={loadingProvider === providerId}
                 >
-                  {loadingProvider === provider.id
-                    ? 'מתחברים...'
-                    : provider.label}
+                  {loadingProvider === providerId
+                    ? t('login.signingIn')
+                    : providerLabels[providerId]}
                 </button>
               ))}
             </div>
-            <Link className="inline-link inline-link-center" to="/explore">
-              Continue as guest
+            <Link
+              className="inline-link inline-link-center"
+              to={localePath('explore')}
+            >
+              {t('login.continueAsGuest')}
             </Link>
             {error ? <p className="error-text">{error}</p> : null}
           </div>

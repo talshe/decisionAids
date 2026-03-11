@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import FlowShell from '../components/decisionAid/FlowShell'
 import StepRenderer from '../components/decisionAid/StepRenderer'
@@ -8,6 +9,7 @@ import type { DecisionAid, DecisionAidResponse } from '../types/decisionAid'
 
 const DecisionAidPage = () => {
   const { slug } = useParams()
+  const { t } = useTranslation()
   const { role, token } = useAuth()
   const [decisionAid, setDecisionAid] = useState<DecisionAid | null>(null)
   const [answers, setAnswers] = useState<Record<string, unknown>>({})
@@ -32,10 +34,10 @@ const DecisionAidPage = () => {
     apiRequest<{ item: DecisionAid }>(`/api/decision-aids/${slug}`)
       .then((result) => setDecisionAid(result.item))
       .catch((err) =>
-        setError(err instanceof Error ? err.message : 'Failed to load decision aid.'),
+        setError(err instanceof Error ? err.message : t('common.failedLoadDecisionAid')),
       )
       .finally(() => setLoading(false))
-  }, [slug])
+  }, [slug, t])
 
   useEffect(() => {
     if (!decisionAid || !token || readOnly) {
@@ -88,11 +90,11 @@ const DecisionAidPage = () => {
       setResponse(result.response)
       setMessage(
         status === 'completed'
-          ? 'Responses saved and marked complete.'
-          : 'Progress saved.',
+          ? t('decisionAid.responsesSaved')
+          : t('decisionAid.progressSaved'),
       )
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save progress.')
+      setError(err instanceof Error ? err.message : t('common.failedSaveProgress'))
     } finally {
       setSaving(false)
     }
@@ -118,16 +120,20 @@ const DecisionAidPage = () => {
         },
       )
       setFavorite(nextFavorite)
-      setMessage(nextFavorite ? 'Added to favorites.' : 'Removed from favorites.')
+      setMessage(
+        nextFavorite
+          ? t('decisionAid.addedToFavorites')
+          : t('decisionAid.removedFromFavorites'),
+      )
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update favorite.')
+      setError(err instanceof Error ? err.message : t('common.failedUpdateFavorite'))
     } finally {
       setSaving(false)
     }
   }
 
   if (loading) {
-    return <div className="card">Loading decision aid...</div>
+    return <div className="card">{t('decisionAid.loading')}</div>
   }
 
   if (error && !decisionAid) {
@@ -135,21 +141,25 @@ const DecisionAidPage = () => {
   }
 
   if (!decisionAid || !currentStep) {
-    return <div className="card">Decision aid not found.</div>
+    return <div className="card">{t('decisionAid.notFound')}</div>
   }
 
   return (
     <div className="stack-lg">
       <section className="card hero-card">
         <div>
-          <p className="eyebrow">Decision Aid</p>
+          <p className="eyebrow">{t('decisionAid.eyebrow')}</p>
           <h2>{decisionAid.title}</h2>
           <p className="subtitle">{decisionAid.summary}</p>
         </div>
         <div className="hero-actions">
-          <span className="status-badge">{decisionAid.estimatedMinutes} minutes</span>
+          <span className="status-badge">
+            {t('decisionAid.minutes', { count: decisionAid.estimatedMinutes })}
+          </span>
           {readOnly ? (
-            <span className="status-badge status-badge-muted">Guest view only</span>
+            <span className="status-badge status-badge-muted">
+              {t('decisionAid.guestViewOnly')}
+            </span>
           ) : (
             <button
               type="button"
@@ -157,7 +167,9 @@ const DecisionAidPage = () => {
               onClick={toggleFavorite}
               disabled={saving}
             >
-              {favorite ? 'Remove favorite' : 'Save to favorites'}
+              {favorite
+                ? t('decisionAid.removeFavorite')
+                : t('decisionAid.saveToFavorites')}
             </button>
           )}
         </div>
@@ -179,10 +191,7 @@ const DecisionAidPage = () => {
             {message ? <p className="success-text">{message}</p> : null}
             {error ? <p className="error-text">{error}</p> : null}
             {readOnly ? (
-              <p className="subtitle">
-                Guests can review the content, but sign in to save answers, favorites,
-                and progress.
-              </p>
+              <p className="subtitle">{t('decisionAid.guestHint')}</p>
             ) : (
               <div className="toolbar">
                 <button
@@ -191,7 +200,7 @@ const DecisionAidPage = () => {
                   onClick={() => saveProgress('in_progress')}
                   disabled={saving}
                 >
-                  {saving ? 'Saving...' : 'Save progress'}
+                  {saving ? t('decisionAid.saving') : t('decisionAid.saveProgress')}
                 </button>
                 <button
                   type="button"
@@ -199,11 +208,13 @@ const DecisionAidPage = () => {
                   onClick={() => saveProgress('completed')}
                   disabled={saving}
                 >
-                  Mark complete
+                  {t('decisionAid.markComplete')}
                 </button>
                 {response ? (
                   <span className="status-badge">
-                    Saved step {response.currentStepIndex + 1}
+                    {t('decisionAid.savedStep', {
+                      step: response.currentStepIndex + 1,
+                    })}
                   </span>
                 ) : null}
               </div>

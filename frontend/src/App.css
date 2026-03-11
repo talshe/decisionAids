@@ -44,6 +44,17 @@
   gap: 1rem;
 }
 
+.shell-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.language-switcher {
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+}
+
 .shell-nav {
   max-width: 1200px;
   margin: 0 auto;
@@ -51,6 +62,10 @@
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+[dir="rtl"] .shell-nav {
+  flex-direction: row-reverse;
 }
 
 .nav-link {
@@ -253,6 +268,11 @@
   margin-top: 1rem;
 }
 
+.link-as-button {
+  text-decoration: none;
+  color: var(--text);
+}
+
 .search-input,
 .field-card {
   display: grid;
@@ -383,6 +403,11 @@
   padding-left: 1.2rem;
 }
 
+[dir="rtl"] .bullet-list {
+  padding-left: 0;
+  padding-right: 1.2rem;
+}
+
 .form-grid {
   display: grid;
   gap: 1rem;
@@ -425,7 +450,6 @@
   padding: 3.5rem 1.5rem;
   position: relative;
   overflow: hidden;
-  direction: rtl;
 }
 
 .login-page::before,
@@ -471,7 +495,14 @@
   flex-direction: column;
   gap: 1.5rem;
   animation: fadeInUp 0.8s ease;
+}
+
+[dir="rtl"] .login-hero {
   text-align: right;
+}
+
+[dir="ltr"] .login-hero {
+  text-align: left;
 }
 
 .login-pill {

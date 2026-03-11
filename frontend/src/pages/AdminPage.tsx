@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/AuthContext'
 import { apiRequest } from '../lib/api'
 import type {
@@ -40,6 +41,7 @@ const createDraftDecisionAid = (): DecisionAid => ({
 })
 
 const AdminPage = () => {
+  const { t } = useTranslation()
   const { token, profile, refreshProfile } = useAuth()
   const [decisionAids, setDecisionAids] = useState<DecisionAid[]>([])
   const [users, setUsers] = useState<UserProfile[]>([])
@@ -81,7 +83,7 @@ const AdminPage = () => {
         setSelectedUserId(userResponse.users[0].uid)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load admin data.')
+      setError(err instanceof Error ? err.message : t('common.failedLoadAdmin'))
     } finally {
       setLoading(false)
     }
@@ -126,11 +128,11 @@ const AdminPage = () => {
 
       setEditor(response.item)
       setStepsJson(JSON.stringify(response.item.steps, null, 2))
-      setMessage('Decision aid saved.')
+      setMessage(t('admin.messageSaved'))
       await loadAdminData()
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Failed to save the decision aid draft.',
+        err instanceof Error ? err.message : t('common.failedSaveDecisionAid'),
       )
     }
   }
@@ -149,10 +151,10 @@ const AdminPage = () => {
         token,
         body: { userId: selectedUserId, decisionAidId: selectedAidId },
       })
-      setMessage('Decision aid assigned.')
+      setMessage(t('admin.messageAssigned'))
       await loadAdminData()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to assign decision aid.')
+      setError(err instanceof Error ? err.message : t('common.failedAssign'))
     }
   }
 
@@ -170,11 +172,11 @@ const AdminPage = () => {
         token,
         body: { role: 'admin' },
       })
-      setMessage('User promoted to admin.')
+      setMessage(t('admin.messagePromoted'))
       await refreshProfile()
       await loadAdminData()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update role.')
+      setError(err instanceof Error ? err.message : t('common.failedUpdateRole'))
     }
   }
 
@@ -188,26 +190,23 @@ const AdminPage = () => {
     <div className="stack-lg">
       <section className="card hero-card">
         <div>
-          <p className="eyebrow">Admin</p>
-          <h2>Manage decision aids and assignments</h2>
-          <p className="subtitle">
-            Publish reusable multi-step decision aids, assign them to users, and
-            manage admin access.
-          </p>
+          <p className="eyebrow">{t('admin.eyebrow')}</p>
+          <h2>{t('admin.title')}</h2>
+          <p className="subtitle">{t('admin.subtitle')}</p>
         </div>
         <button type="button" className="ghost-button" onClick={resetEditor}>
-          New decision aid
+          {t('admin.newDecisionAid')}
         </button>
       </section>
 
-      {loading ? <div className="card">Loading admin workspace...</div> : null}
+      {loading ? <div className="card">{t('admin.loading')}</div> : null}
       {message ? <div className="card success-text">{message}</div> : null}
       {error ? <div className="card error-text">{error}</div> : null}
 
       <section className="card-grid admin-grid">
         <section className="card">
           <div className="section-header">
-            <h2>Published and draft decision aids</h2>
+            <h2>{t('admin.decisionAidsSection')}</h2>
             <span className="status-badge">{decisionAids.length}</span>
           </div>
           <div className="list-stack">
@@ -234,17 +233,17 @@ const AdminPage = () => {
 
         <section className="card">
           <div className="section-header">
-            <h2>Assignment center</h2>
+            <h2>{t('admin.assignmentCenter')}</h2>
             <span className="status-badge">{assignments.length}</span>
           </div>
 
           <label className="field-card">
-            <span className="field-label">Find users</span>
+            <span className="field-label">{t('admin.findUsers')}</span>
             <input
               className="input-text"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by email or name"
+              placeholder={t('admin.searchPlaceholder')}
             />
           </label>
 
@@ -254,7 +253,7 @@ const AdminPage = () => {
               value={selectedAidId}
               onChange={(event) => setSelectedAidId(event.target.value)}
             >
-              <option value="">Choose a decision aid</option>
+              <option value="">{t('admin.chooseDecisionAid')}</option>
               {decisionAids.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.title}
@@ -267,7 +266,7 @@ const AdminPage = () => {
               value={selectedUserId}
               onChange={(event) => setSelectedUserId(event.target.value)}
             >
-              <option value="">Choose a user</option>
+              <option value="">{t('admin.chooseUser')}</option>
               {users.map((user) => (
                 <option key={user.uid} value={user.uid}>
                   {user.email || user.name || user.uid}
@@ -278,10 +277,10 @@ const AdminPage = () => {
 
           <div className="toolbar">
             <button type="button" className="primary-button" onClick={handleAssign}>
-              Assign decision aid
+              {t('admin.assign')}
             </button>
             <button type="button" className="ghost-button" onClick={handleRolePromotion}>
-              Promote selected user to admin
+              {t('admin.promoteAdmin')}
             </button>
           </div>
 
@@ -291,7 +290,7 @@ const AdminPage = () => {
                 <span>
                   <strong>{assignment.decisionAidId}</strong>
                   <small className="choice-description">
-                    assigned to {assignment.userId}
+                    {t('admin.assignedTo')} {assignment.userId}
                   </small>
                 </span>
                 <button
@@ -308,7 +307,7 @@ const AdminPage = () => {
                     await loadAdminData()
                   }}
                 >
-                  Remove
+                  {t('admin.remove')}
                 </button>
               </div>
             ))}
@@ -318,13 +317,13 @@ const AdminPage = () => {
 
       <section className="card">
         <div className="section-header">
-          <h2>Decision aid editor</h2>
+          <h2>{t('admin.editorTitle')}</h2>
           {selectedAid ? <span className="status-badge">{selectedAid.slug}</span> : null}
         </div>
 
         <div className="form-grid">
           <label className="field-card">
-            <span className="field-label">Title</span>
+            <span className="field-label">{t('admin.fieldTitle')}</span>
             <input
               className="input-text"
               value={editor.title}
@@ -334,7 +333,7 @@ const AdminPage = () => {
             />
           </label>
           <label className="field-card">
-            <span className="field-label">Slug</span>
+            <span className="field-label">{t('admin.fieldSlug')}</span>
             <input
               className="input-text"
               value={editor.slug}
@@ -344,7 +343,7 @@ const AdminPage = () => {
             />
           </label>
           <label className="field-card">
-            <span className="field-label">Estimated minutes</span>
+            <span className="field-label">{t('admin.fieldEstimatedMinutes')}</span>
             <input
               className="input-text"
               type="number"
@@ -358,7 +357,7 @@ const AdminPage = () => {
             />
           </label>
           <label className="field-card">
-            <span className="field-label">Publish status</span>
+            <span className="field-label">{t('admin.fieldPublishStatus')}</span>
             <select
               className="select-input"
               value={editor.publishStatus}
@@ -369,14 +368,14 @@ const AdminPage = () => {
                 }))
               }
             >
-              <option value="draft">draft</option>
-              <option value="published">published</option>
+              <option value="draft">{t('admin.statusDraft')}</option>
+              <option value="published">{t('admin.statusPublished')}</option>
             </select>
           </label>
         </div>
 
         <label className="field-card">
-          <span className="field-label">Summary</span>
+          <span className="field-label">{t('admin.fieldSummary')}</span>
           <textarea
             className="input-textarea"
             rows={3}
@@ -388,7 +387,7 @@ const AdminPage = () => {
         </label>
 
         <label className="field-card">
-          <span className="field-label">Tags</span>
+          <span className="field-label">{t('admin.fieldTags')}</span>
           <input
             className="input-text"
             value={editor.tags.join(', ')}
@@ -405,7 +404,7 @@ const AdminPage = () => {
         </label>
 
         <label className="field-card">
-          <span className="field-label">Steps JSON</span>
+          <span className="field-label">{t('admin.fieldStepsJson')}</span>
           <textarea
             className="input-textarea code-textarea"
             rows={18}
@@ -416,7 +415,7 @@ const AdminPage = () => {
 
         <div className="toolbar">
           <button type="button" className="primary-button" onClick={handleSaveDecisionAid}>
-            Save decision aid
+            {t('admin.saveDecisionAid')}
           </button>
         </div>
       </section>
